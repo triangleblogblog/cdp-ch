@@ -4,7 +4,7 @@ on:
   schedule:
     # <minute [0,59]> <hour [0,23]> <day of the month [1,31]> <month of the year [1,12]> <day of the week [0,6]>
     # https://pubs.opengroup.org/onlinepubs/9699919799/utilities/crontab.html#tag_20_25_07
-    - cron: '15 23 * * *'
+    - cron: "15 23 * * *"
   workflow_dispatch:
     inputs:
       from:
@@ -40,7 +40,7 @@ jobs:
               --single \
               --labels=gcp-cdp-runner \
               --cloud=gcp \
-              --cloud-region=us-west1-b \
+              --cloud-region=us-central1-f \
               --cloud-type=n1-standard-4 \
               --cloud-gpu=nvidia-tesla-t4 \
               --cloud-hdd-size=30 \
@@ -54,58 +54,58 @@ jobs:
       options: --gpus all
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
-    - name: Check GPU Drivers
-      run: |
-        nvidia-smi
+      - name: Check GPU Drivers
+        run: |
+          nvidia-smi
 
-    - name: Install Packages
-      run: |
-        sudo apt update
-        sudo apt-get install -y --no-install-recommends \
-          libsndfile1 \
-          ffmpeg
+      - name: Install Packages
+        run: |
+          sudo apt update
+          sudo apt-get install -y --no-install-recommends \
+            libsndfile1 \
+            ffmpeg
 
-    - name: Install Python Dependencies
-      run: |
-        cd python/
-        pip install --upgrade pip
-        pip install .
+      - name: Install Python Dependencies
+        run: |
+          cd python/
+          pip install --upgrade pip
+          pip install .
 
-    - name: Setup gcloud
-      uses: google-github-actions/setup-gcloud@v0
-      with:
-        project_id: cdp-chapel-hill-pulvuoxc
-        service_account_key: ${{ secrets.GOOGLE_CREDENTIALS }}
-        export_default_credentials: true
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: cdp-chapel-hill-pulvuoxc
+          service_account_key: ${{ secrets.GOOGLE_CREDENTIALS }}
+          export_default_credentials: true
 
-    - name: Dump Credentials to JSON
-      uses: jsdaniell/create-json@v1.2.2
-      with:
-        name: "google-creds.json"
-        json: ${{ secrets.GOOGLE_CREDENTIALS }}
-        dir: "python/"
+      - name: Dump Credentials to JSON
+        uses: jsdaniell/create-json@v1.2.2
+        with:
+          name: "google-creds.json"
+          json: ${{ secrets.GOOGLE_CREDENTIALS }}
+          dir: "python/"
 
-    - name: Gather and Process New Events - CRON
-      if: ${{ github.event_name == 'schedule' }}
-      run: |
-        cd python/
-        run_cdp_event_gather event-gather-config.json
+      - name: Gather and Process New Events - CRON
+        if: ${{ github.event_name == 'schedule' }}
+        run: |
+          cd python/
+          run_cdp_event_gather event-gather-config.json
 
-    - name: Gather and Process Requested Events - Manual
-      if: ${{ github.event_name == 'workflow_dispatch' }}
-      run: |
-        cd python/
-        CDP_FROM_USER=${{ github.event.inputs.from }}
-        CDP_FROM_DEFAULT=$(date -Iseconds -d "2 days ago")
-        CDP_FROM=${CDP_FROM_USER:-$CDP_FROM_DEFAULT}
-        CDP_TO_USER=${{ github.event.inputs.to }}
-        CDP_TO_DEFAULT=$(date -Iseconds)
-        CDP_TO=${CDP_TO_USER:-$CDP_TO_DEFAULT}
-        run_cdp_event_gather event-gather-config.json \
-          --from $CDP_FROM \
-          --to $CDP_TO
+      - name: Gather and Process Requested Events - Manual
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          cd python/
+          CDP_FROM_USER=${{ github.event.inputs.from }}
+          CDP_FROM_DEFAULT=$(date -Iseconds -d "2 days ago")
+          CDP_FROM=${CDP_FROM_USER:-$CDP_FROM_DEFAULT}
+          CDP_TO_USER=${{ github.event.inputs.to }}
+          CDP_TO_DEFAULT=$(date -Iseconds)
+          CDP_TO=${CDP_TO_USER:-$CDP_TO_DEFAULT}
+          run_cdp_event_gather event-gather-config.json \
+            --from $CDP_FROM \
+            --to $CDP_TO
