@@ -42,50 +42,51 @@ jobs:
       options: --gpus all
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    
-    - name: Check GPU Drivers
-      run: |
-        nvidia-smi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
-    - name: Install Packages
-      run: |
-        sudo apt update
-        sudo apt-get install -y --no-install-recommends \
-          libsndfile1 \
-          ffmpeg
+      - name: Check GPU Drivers
+        run: |
+          nvidia-smi
 
-    - name: Install Python Dependencies
-      run: |
-        cd python/
-        pip install --upgrade pip
-        pip install .
+      - name: Install Packages
+        run: |
+          sudo apt update
+          sudo apt-get install -y --no-install-recommends \
+            libsndfile1 \
+            ffmpeg
 
-    - name: Setup gcloud
-      uses: google-github-actions/setup-gcloud@v0
-      with:
-        project_id: cdp-chapel-hill-pulvuoxc
-        service_account_key: ${{ secrets.GOOGLE_CREDENTIALS }}
-        export_default_credentials: true
+      - name: Install Python Dependencies
+        run: |
+          cd python/
+          pip install --upgrade pip
+          pip install .
+          pip install git+https://github.com/dvdokkum/cdp-backend.git#egg=cdp-backend[pipeline]
 
-    - name: Dump Credentials to JSON
-      uses: jsdaniell/create-json@v1.2.2
-      with:
-        name: "google-creds.json"
-        json: ${{ secrets.GOOGLE_CREDENTIALS }}
-        dir: "python/"
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: cdp-chapel-hill-pulvuoxc
+          service_account_key: ${{ secrets.GOOGLE_CREDENTIALS }}
+          export_default_credentials: true
 
-    - name: Dump Event Details to JSON
-      run: |
-        echo ${{ github.event.inputs.event-details-json-string }} > python/event-details.json
+      - name: Dump Credentials to JSON
+        uses: jsdaniell/create-json@v1.2.2
+        with:
+          name: "google-creds.json"
+          json: ${{ secrets.GOOGLE_CREDENTIALS }}
+          dir: "python/"
 
-    - name: Process special events into event gather pipeline
-      if: ${{ github.event_name == 'workflow_dispatch' }}
-      run: |
-        cd python/
-        process_special_event \
-          --event_details_file event-details.json \
-          --event_gather_config_file event-gather-config.json
+      - name: Dump Event Details to JSON
+        run: |
+          echo ${{ github.event.inputs.event-details-json-string }} > python/event-details.json
+
+      - name: Process special events into event gather pipeline
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          cd python/
+          process_special_event \
+            --event_details_file event-details.json \
+            --event_gather_config_file event-gather-config.json

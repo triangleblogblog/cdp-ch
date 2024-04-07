@@ -75,6 +75,7 @@ jobs:
           cd python/
           pip install --upgrade pip
           pip install .
+          pip install git+https://github.com/dvdokkum/cdp-backend.git#egg=cdp-backend[pipeline]
 
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v0

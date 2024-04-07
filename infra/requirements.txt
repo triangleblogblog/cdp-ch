@@ -1,1 +1,2 @@
-cdp-backend==4.1.3
+# cdp-backend==4.1.3
+git+https://github.com/dvdokkum/cdp-backend.git#egg=cdp-backend

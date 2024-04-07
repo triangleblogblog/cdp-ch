@@ -7,7 +7,6 @@ from setuptools import find_packages, setup
 
 requirements = [
     # "cdp-backend[pipeline]==4.1.3",
-    "git+https://github.com/dvdokkum/cdp-backend.git#egg=cdp-backend[pipeline]",
     "cdp-scrapers>=0.8.1",
 ]
 
